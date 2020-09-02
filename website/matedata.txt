@@ -1,0 +1,19 @@
+
+服务功能：
+家庭保洁（环境）
+家庭维修（水电灯电器设备类）（设备使用与保养）
+家庭成员照护（如孕妇
+老人
+小孩保育等）（人文关怀）
+厨师、幼师、保健医师服务（三师服务 提升生活品质）
+宠物/植物托管等。
+
+阿里云
+零壹家的喵
+amiao190520
+远程连接密码 104649
+debian
+user root password Root1234
+user debian password debian
+
+glassfish server 4848 admin debian

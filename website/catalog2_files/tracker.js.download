@@ -1,0 +1,668 @@
+if (typeof performance != "undefined") {
+    var biPerformanceTimes = function () {
+        try {
+            var timing = performance.timing;
+            var loadTime = timing.loadEventEnd - timing.navigationStart;//过早获取时,loadEventEnd有时会是0
+            if (loadTime <= 0) {
+                // 未加载完，延迟200ms后继续times方法，直到成功
+                setTimeout(function () {
+                    biPerformanceTimes();
+                }, 200);
+                return;
+            }
+            var readyStart = timing.fetchStart - timing.navigationStart;
+            var redirectTime = timing.redirectEnd - timing.redirectStart;
+            var appcacheTime = timing.domainLookupStart - timing.fetchStart;
+            var unloadEventTime = timing.unloadEventEnd - timing.unloadEventStart;
+            var lookupDomainTime = timing.domainLookupEnd - timing.domainLookupStart;
+            var connectTime = timing.connectEnd - timing.connectStart;
+            var requestTime = timing.responseEnd - timing.requestStart;
+            var initDomTreeTime = timing.domInteractive - timing.responseEnd;
+            var domReadyTime = timing.domComplete - timing.domInteractive; //过早获取时,domComplete有时会是0
+            var loadEventTime = timing.loadEventEnd - timing.loadEventStart;
+            var load_params = {
+                "readyStart": readyStart,
+                "redirectTime": redirectTime,
+                "appcacheTime": appcacheTime,
+                "unloadEventTime": unloadEventTime,
+                "lookupDomainTime": lookupDomainTime,
+                "connectTime": connectTime,
+                "requestTime": requestTime,
+                "initDomTreeTime": initDomTreeTime,
+                "domReadyTime": domReadyTime,
+                "loadEventTime": loadEventTime,
+                "loadTime": loadTime
+            }
+            biTrackEvent('loadview',load_params);
+        } catch (e) {
+        }
+    }
+}
+try {
+    var bi_random = Math.round(Math.random() * 10);
+    if (bi_random == 8) {
+        window.onload = biPerformanceTimes;// onload时，触发times方法
+    }
+} catch (e) {
+}
+
+function setBICookie(name, value, days, domain) {
+    try {
+        var exp = new Date();
+        exp.setTime(exp.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = name + "=" + value + ";" + "expires=" + exp.toGMTString() + ";path=/;" + (domain ? ("domain=" + domain + ";") : "");
+    } catch (e) {
+    }
+}
+
+function getBICookie(name) {
+    try {
+        var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+        if (arr = document.cookie.match(reg))
+            return arr[2];
+        else
+            return null;
+    } catch (e) {
+    }
+}
+
+function getQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    var url = location.href;
+    var hash = location.hash;
+    var params = "";
+    if (url.indexOf("?") > 0) {
+        params = url.substring(url.indexOf("?"), url.length);
+    }
+    if (hash != "") {
+        params = params.replace(hash, "");
+    }
+    var r = params.substr(1).match(reg);
+    if (r != null) return decodeURIComponent(r[2]);
+    return null;
+}
+
+function trackClick(data) {
+    try {
+        data = mergeJson(bi_params, data);
+        if ("undefined" != typeof data) {
+            writelog(data, "clickview", true);
+        } else {
+            writelog(null, "clickview", true);
+        }
+
+        // 增加不加载 gio 的变量
+        if (typeof bi_params !== 'undefined' && Object.prototype.toString.call(bi_params) === '[object Object]' && bi_params.disableGIO) {
+            return
+        }
+        // 增加gio click 
+        if (!(Object.prototype.toString.call(data) === '[object Object]' || Object.prototype.toString.call(data) === '[object String]')) {
+            return
+        }
+        if (typeof data['event_id'] === 'undefined') {
+            return
+        }
+        if (typeof data['event_number'] !== 'undefined') {
+            gio('track', data['event_id'], data['event_number'], data)
+            // console.log('gio track_number', data['event_id'], data['event_number'], data)
+        } else {
+            gio('track', data['event_id'], data)
+            // console.log('gio track', data['event_id'], data)
+        }
+
+    } catch (e) {
+    }
+
+}
+
+function trackPageview(data) {
+    try {
+        if ("undefined" != typeof bi_params) {
+            data = mergeJson(bi_params, data);
+        }
+        if ("undefined" != typeof data) {
+            writelog(data, "pageview", true);
+        } else {
+            writelog(null, "pageview", true);
+        }
+    } catch (e) {
+    }
+}
+
+function biTrackEvent(eventType,data){
+    try {
+        if ("undefined" != typeof bi_params) {
+            data = mergeJson(bi_params, data);
+        }
+        if("string" != typeof eventType){
+            console.error("eventType can not be empty!");
+        }else{
+            if ("undefined" != typeof data) {
+                writelog(data, eventType, true);
+            } else {
+                writelog(null, eventType, true);
+            }
+        }
+    } catch (e) {
+    }
+}
+
+function sendTrackerLog(a) {
+    var xhr = null;
+    if (window.XMLHttpRequest) {
+        xhr = new window.XMLHttpRequest();
+    }
+    else {
+        xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+    a = a.split('?')
+    xhr.open('POST', a[0], true);
+    // xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.send(a[1])
+    // (new Image).src = a
+}
+
+function writelog(data, logtype, flag) {
+    var cookie_days = 730;//Cookie Save Days
+    var url = document.domain;
+    var cookie_domain = "." + url.match(/[\w][\w-]*\.(?:com\.cn|com|cn|co|net|org|gov|cc|biz|info|so)/)[0];
+    var is_m = false;
+    var m_host = ['ma.djtest.cn', 'mb.djtest.cn', 'm.daojia.com', 'm.djtest.cn', 'm-stable.djtest.cn', 'm-8-alprod.djtest.cn'];
+    for (var idx in m_host) {
+        if (location.hostname == m_host[idx]) {
+            is_m = true;
+            break;
+        }
+    }
+    // 如果是m站的，直接将dj_appid设置成20
+    if (is_m === true) {
+        setBICookie("dj_appid", 20, cookie_days, cookie_domain);
+    }
+    var logGif = 'a'
+    if (getBICookie('dj_appid') == 20) {
+        logGif = 'm';
+    }
+    else if (getBICookie('dj_appid') == 30) {
+        logGif = 'jz_app_worker';
+    }
+    else if (getBICookie('dj_appid') == 22) {
+        logGif = 'jz_user';
+    }
+    var logHost = "//track.daojia.com/"
+    var is_test = false;
+    var test_host = ['.djtest.cn'];
+    for (var idx in test_host) {
+        if (location.hostname.indexOf(test_host[idx]) > -1) {
+            is_test = true;
+            break;
+        }
+    }
+    if (is_test === true) {
+        logHost = "//track.djtest.cn/"
+    }
+
+    var bi_hmsr_detail = getQueryString("hmsr");
+    if (bi_hmsr_detail) {
+        setBICookie("dj_hmsr_detail", bi_hmsr_detail, cookie_days, cookie_domain);
+    }
+
+    var log_url = logHost + logGif + ".gif?r=" + Math.random() + "&logv=1.2&type=" + logtype;
+    var bi_hmsr = getHmsr();
+    if (bi_hmsr != null && bi_hmsr != "") {
+        setBICookie("bi_hmsr", bi_hmsr, cookie_days, cookie_domain);
+        setBICookie("dj_hmsr", bi_hmsr, cookie_days, cookie_domain);
+    } else {
+        if (getBICookie("dj_appname") != null && getBICookie("dj_appname") != "") {
+            var bi_tmp_appid = getBICookie("dj_appname");
+            if (bi_tmp_appid.indexOf("ios") >= 0) {
+                bi_hmsr = "ios";
+            } else if (bi_tmp_appid.indexOf("android") >= 0) {
+                bi_hmsr = "android";
+            }
+            setBICookie("bi_hmsr", bi_hmsr, cookie_days, cookie_domain);
+            setBICookie("dj_hmsr", bi_hmsr, cookie_days, cookie_domain);
+        } else {
+            if (getBICookie("dj_hmsr") != null && getBICookie("dj_hmsr") != "") {
+                bi_hmsr = getBICookie("dj_hmsr");
+            }else if(getBICookie("bi_hmsr") != null && getBICookie("bi_hmsr") != ""){
+                bi_hmsr = getBICookie("bi_hmsr");
+
+            }else {
+                bi_hmsr = "none";
+                setBICookie("bi_hmsr", bi_hmsr, cookie_days, cookie_domain);
+                setBICookie("dj_hmsr", bi_hmsr, cookie_days, cookie_domain);
+            }
+        }
+    }
+    var bi_znsr = "none";
+    if (getQueryString("znsr") != null && getQueryString("znsr") != "") {
+        bi_znsr = getQueryString("znsr");
+        setBICookie("dj_znsr", bi_znsr, 1 / 24, cookie_domain);
+    } else {
+        if (getBICookie("dj_znsr") != null && getBICookie("dj_znsr") != "") {
+            bi_znsr = getBICookie("dj_znsr");
+        } else {
+            setBICookie("dj_znsr", bi_znsr, 1 / 24, cookie_domain);
+        }
+    }
+    var bi_hmmd = "none";
+    if (getQueryString("hmmd") != null && getQueryString("hmmd") != "") {
+        bi_hmmd = getQueryString("hmmd");
+        setBICookie("dj_hmmd", bi_hmmd, cookie_days, cookie_domain);
+    } else {
+        if (getBICookie("dj_hmmd") != null && getBICookie("dj_hmmd") != "") {
+            bi_hmmd = getBICookie("dj_hmmd");
+        } else {
+            setBICookie("dj_hmmd", bi_hmmd, cookie_days, cookie_domain);
+        }
+    }
+    var bi_hmpl = "none";
+    if (getQueryString("hmpl") != null && getQueryString("hmpl") != "") {
+        bi_hmpl = getQueryString("hmpl");
+        setBICookie("dj_hmpl", bi_hmpl, cookie_days, cookie_domain);
+    } else {
+        if (getBICookie("dj_hmpl") != null && getBICookie("dj_hmpl") != "") {
+            bi_hmpl = getBICookie("dj_hmpl");
+        } else {
+            setBICookie("dj_hmpl", bi_hmpl, cookie_days, cookie_domain);
+        }
+    }
+    var bi_hmkw = "";
+    hmkw = _getKeyWord(document.referrer);
+    if (hmkw != null && hmkw != "") {
+        bi_hmkw = hmkw;
+        setBICookie("dj_hmkw", bi_hmkw, cookie_days, cookie_domain);
+    } else {
+        if (getQueryString("hmkw") != null && getQueryString("hmkw") != "") {
+            bi_hmkw = getQueryString("hmkw");
+            setBICookie("dj_hmkw", bi_hmkw, cookie_days, cookie_domain);
+        } else {
+            if (getBICookie("dj_hmkw") != null && getBICookie("dj_hmkw") != "") {
+                bi_hmkw = getBICookie("dj_hmkw");
+            } else {
+                setBICookie("dj_hmkw", bi_hmkw, cookie_days, cookie_domain);
+            }
+        }
+    }
+    var bi_cookieid = "";
+    if(getQueryString("cookie_id") != null && getQueryString("cookie_id") != ""){
+        bi_cookieid=getQueryString("cookie_id");
+        setBICookie("bi_cookieid", bi_cookieid, cookie_days, cookie_domain);
+        setBICookie("dj_cookieid", bi_cookieid, cookie_days, cookie_domain);
+    }else if(getBICookie("bi_cookieid")!=null && getBICookie("bi_cookieid")!=""){
+        bi_cookieid=getBICookie("bi_cookieid");
+        setBICookie("dj_cookieid", bi_cookieid, cookie_days, cookie_domain);
+    }else if(getBICookie("dj_cookieid")!=null && getBICookie("dj_cookieid")!=""){
+        bi_cookieid=getBICookie("dj_cookieid");
+        setBICookie("dj_cookieid", bi_cookieid, cookie_days, cookie_domain);
+    }else{
+        bi_cookieid = (new Date).valueOf() + "" + parseInt(Math.random() * 10000000000);
+        setBICookie("bi_cookieid", bi_cookieid, cookie_days, cookie_domain);
+        setBICookie("dj_cookieid", bi_cookieid, cookie_days, cookie_domain);
+    }
+    var bi_imei = "none";
+    if (getBICookie("dj_imei") != null && getBICookie("dj_imei") != "") {
+        bi_imei = getBICookie("dj_imei");
+    }else if (getQueryString("imei") != null && getQueryString("imei") != "") {
+        bi_imei = getQueryString("imei");
+    }
+
+    var bi_appid = "none";
+    if (getBICookie("dj_appid") != null && getBICookie("dj_appid") != "") {
+        bi_appid = getBICookie("dj_appid");
+    } else if (getQueryString("appid") != null && getQueryString("appid") != "") {
+        bi_appid = getQueryString("appid");
+        setBICookie("dj_appid", bi_appid, cookie_days, cookie_domain);
+    }
+
+
+    var bi_appversion = "none";
+    if (getBICookie("dj_appversion") != null && getBICookie("dj_appversion") != "") {
+        bi_appversion = getBICookie("dj_appversion");
+    }
+    var bi_app_usergroup = "none";
+    if (getBICookie("dj_usergroup") != null && getBICookie("dj_usergroup") != "") {
+        bi_app_usergroup = getBICookie("dj_usergroup");
+    }
+
+    var bi_location = "none";
+    if (getBICookie("dj_location") != null && getBICookie("dj_location") != "") {
+        bi_location = getBICookie("dj_location");
+    } else if (getQueryString("location") != null && getQueryString("location") != "") {
+        if (typeof bi_params == "undefined" || bi_params.location_cookie_only != true) {
+            bi_location = getQueryString("location");
+        }
+    }
+
+    var bi_cityid = "none";
+    if (getBICookie("dj_cityid") != null && getBICookie("dj_cityid") != "") {
+        bi_cityid = getBICookie("dj_cityid");
+    }else if (getQueryString("cityid") != null && getQueryString("cityid") != "") {
+        if (typeof bi_params == "undefined" || bi_params.location_cookie_only != true) {
+            bi_cityid = getQueryString("cityid");
+        }    
+    }
+
+    var bi_uid = "none";
+    if (getBICookie("dj_psuid") != null && getBICookie("dj_psuid") != "") {
+        bi_uid = getBICookie("dj_psuid");
+    } else if (getQueryString("uid") != null && getQueryString("uid") != "") {
+        bi_uid = getQueryString("uid");
+    }
+
+    var bi_linkid = "";
+    if (getQueryString("linkid") != null && getQueryString("linkid") != "") {
+        bi_linkid = getQueryString("linkid");
+        setBICookie("dj_linkid", bi_linkid, cookie_days, cookie_domain);
+    } else if (getBICookie("dj_linkid") != null && getBICookie("dj_linkid") != "") {
+        if (typeof bi_params != "undefined" && bi_params.page_type != "home_page") {
+            bi_linkid = getBICookie("dj_linkid");
+        }
+    }
+
+    var bi_drstgy = "";
+    if (getQueryString("drstgy") != null && getQueryString("drstgy") != "") {
+        bi_drstgy = getQueryString("drstgy");
+        setBICookie("dj_drstgy", bi_drstgy, cookie_days, cookie_domain);
+    } else if (getBICookie("dj_drstgy") != null && getBICookie("dj_drstgy") != "") {
+        if (typeof bi_params != "undefined" && bi_params.page_type != "home_page") {
+            bi_drstgy = getBICookie("dj_drstgy");
+        }
+    }
+
+    var referrer = encodeURIComponent(document.referrer);
+    if (referrer == null || referrer == "") {
+        referrer = "none";
+    }
+
+    var appchannel = "";
+    if (getBICookie("dj_appchannel") != null && getBICookie("dj_appchannel") != "") {
+        appchannel = getBICookie("dj_appchannel");
+    }
+
+    var bi_current_url = encodeURIComponent(location.href);
+    log_url += "&hmsr=" + bi_hmsr + "&referrer=" + referrer + "&cookieid=" + bi_cookieid + "&hmpl=" + bi_hmpl + "&hmmd=" + bi_hmmd + "&hmkw=" + bi_hmkw + "&znsr=" + bi_znsr + "&imei=" + bi_imei + "&appid=" + bi_appid + "&appversion=" + bi_appversion + "&app_usergroup=" + bi_app_usergroup + "&cityid=" + bi_cityid + "&location=" + bi_location + "&uid=" + bi_uid + "&url=" + bi_current_url + "&appchannel=" + appchannel + "&hmsr_detail=" + bi_hmsr_detail;
+
+    if (bi_linkid != "") {
+        log_url += "&linkid=" + bi_linkid;
+    }
+
+    if (bi_drstgy != "") {
+        log_url += "&drstgy=" + bi_drstgy;
+    }
+
+    try {
+        bi_abtest(cookie_domain);
+    } catch (e) {
+    }
+    if (data != null && typeof data == "object") {
+        for (var key in data) {
+            var value = data[key];
+            log_url += "&" + key + "=" + value;
+        }
+    } else if (data != null && typeof data == "string") {
+        log_url += "&" + data;
+    }
+    if (flag) {
+        sendTrackerLog(log_url);
+    }
+}
+
+try {
+    if ("undefined" != typeof bi_params) {
+        var flag = true;
+        if (bi_params.auto_mode == false || bi_params.auto_mode == "false") {
+            flag = false;
+        }
+        writelog(bi_params, "pageview", flag);
+    } else {
+        writelog(null, "pageview", true);
+    }
+} catch (e) {
+}
+
+function parse_url(url) {
+    var a = document.createElement('a');
+    a.href = url;
+    return {
+        source: url,
+        protocol: a.protocol.replace(':', ''),
+        host: a.hostname,
+        port: a.port,
+        query: a.search,
+        params: (function () {
+            var ret = {},
+                seg = a.search.replace(/^\?/, '').split('&'),
+                len = seg.length,
+                i = 0,
+                s;
+            for (; i < len; i++) {
+                if (!seg[i]) {
+                    continue;
+                }
+                s = seg[i].split('=');
+                ret[s[0]] = s[1];
+            }
+            return ret;
+        })(),
+        file: (a.pathname.match(/\/([^\/?#]+)$/i) || [, ''])[1],
+        hash: a.hash.replace('#', ''),
+        path: a.pathname.replace(/^([^\/])/, '/$1'),
+        relative: (a.href.match(/tps?:\/\/[^\/]+(.+)/) || [, ''])[1],
+        segments: a.pathname.replace(/^\//, '').split('/')
+    };
+}
+
+function _getKeyWord(referrer) {
+    var _kw = "";
+    if (referrer != null && referrer != "") {
+        var rf_obj = parse_url(referrer);
+        var rf_host = rf_obj.host;
+        if (rf_host == "www.baidu.com") {
+            _kw = rf_obj.params.wd;
+        } else if (rf_host == "m.baidu.com") {
+            _kw = rf_obj.params.word;
+        } else if (rf_host == "www.sogou.com") {
+            _kw = rf_obj.params.query;
+        } else if (rf_host == "m.sogou.com") {
+            _kw = rf_obj.params.keyword;
+        } else if (rf_host == "www.so.com" || rf_host == "m.so.com" || rf_host == "cn.bing.com" || rf_host == "global.bing.com" || rf_host == "m.sm.cn" || rf_host == "www.google.cn" || rf_host == "www.google.com.hk") {
+            _kw = rf_obj.params.q;
+        }
+        if (typeof _kw == "undefined") {
+            _kw = "";
+        }
+    }
+    return _kw;
+}
+
+function getHmsr() {
+    var _hmsr = getQueryString("hmsr");
+    var referrer = document.referrer;
+    if (referrer != null && referrer != "" && (_hmsr == null || _hmsr == "")) {
+        var rf_obj = parse_url(referrer);
+        var rf_host = rf_obj.host;
+        if (rf_host == "www.baidu.com") {
+            _hmsr = "seo_baidu_pc";
+        } else if (rf_host == "m.baidu.com") {
+            _hmsr = "seo_baidu_m";
+        }
+        else if (rf_host == "www.sogou.com") {
+            _hmsr = "seo_sogou_pc";
+        }
+        else if (rf_host == "m.sogou.com") {
+            _hmsr = "seo_sogou_m";
+        }
+        else if (rf_host == "www.so.com") {
+            _hmsr = "seo_haosou_pc";
+        }
+        else if (rf_host == "m.so.com") {
+            _hmsr = "seo_haosou_m";
+        }
+        else if (rf_host == "cn.bing.com" || rf_host == "global.bing.com") {
+            _hmsr = "seo_bing";
+        }
+        else if (rf_host == "m.sm.cn") {
+            _hmsr = "seo_sm_m";
+        }
+        else if (rf_host == "www.google.cn" || rf_host == "www.google.com.hk") {
+            _hmsr = "seo_google";
+        }
+    }
+    return _hmsr;
+}
+
+function mergeJson(A, B) {
+    var tmp = new Object();
+    if ("undefined" != typeof A) {
+        for (var key in A) {
+            tmp[key] = A[key];
+        }
+    }
+    if ("undefined" != typeof B) {
+        if ("string" == typeof B) {
+            B = urlFieldsToJson(B);
+        }
+        for (var key in B) {
+            tmp[key] = B[key];
+        }
+    }
+    return tmp;
+}
+
+function urlFieldsToJson(F) {
+    var obj = new Object();
+    try {
+        var arr1 = F.split("&");
+        if (arr1.length > 0) {
+            for (var i in arr1) {
+                var arr2 = arr1[i].split("=");
+                if (arr2.length == 2) {
+                    obj[arr2[0]] = arr2[1];
+                }
+            }
+        }
+    } catch (e) {
+    }
+    return obj;
+}
+
+function bi_abtest(cookie_domain) {
+    if (typeof bi_params != "undefined" && typeof bi_params.abtest != "undefined") {
+        var tmp_abtest = bi_params.abtest;
+        var bi_abtest = getBICookie("abtest");
+        if (bi_abtest == null) {
+            bi_abtest = tmp_abtest;
+        } else {
+            if (bi_abtest.indexOf(tmp_abtest) < 0) {
+                bi_abtest += "|" + tmp_abtest;
+            }
+        }
+        setBICookie("abtest", bi_abtest, 1 / 48, cookie_domain);
+    }
+}
+
+//赶集埋点
+var ganji_hmsr = getBICookie("dj_hmsr");
+if (ganji_hmsr != null && ganji_hmsr != "" && ganji_hmsr != "none") {
+    if (ganji_hmsr.indexOf("ganji") >= 0) {
+        var gj_hm = document.createElement("script");
+        gj_hm.src = "//sta.ganjistatic1.com/att/project/touch/h5_log/tracker_other.min.js";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(gj_hm, s);
+    }
+}
+//growing io
+var gio_accountIds = {
+    "daojia": "74bce9d2895149d68bf4e30aa9f1555e",
+    "qf": "9228cfc474a2029f",
+    "sy_driver": "9eb9e16ae46b6f0d",
+    "sy_user": "b76cb7359fa983bc",
+    "sy_business": "82afe754dcf2378f",
+    "sy_ent": "96ae42ffe0257246",
+    "m": "89be27711aedaefd",
+    "jz_ys": "917ecd7862ab8755",
+    "bdap": "881e06f130852e41",
+    "work": "b6fd3eaa3341abf1",
+    "jz_ydt": "917ecd7862ab8755",//家政一点通
+    "pt_yydd": "a116f944ff8a0c65",//平台toB招商
+    "jt_llqbb": "b6fd3eaa3341abf1",//集团企业信息化浏览器版本
+    "jt_swz": "ab1d31a7d2b9a026",//集团守望者监控平台
+    "jt_djy": "9dee20f4d635a9f4", //集团到家云
+    "minisite": "a116f944ff8a0c65",
+    "lianmeng": "b1a1399bd0d11acd",
+    "jz_zs": "b92b60798b5b5602",
+    "jz_saleclue": "83c69c149cdbb081",
+    "jz_bjkshdd":"b51b5c36592f87b0"  //家政保洁可视化调度
+};
+
+var gio_accountId = gio_accountIds.daojia;
+(function () {
+    if (location.hostname.indexOf("58qf.com") >= 0) {
+        gio_accountId = gio_accountIds.qf;
+    } else if (location.hostname == "lahuo.daojia.com" || location.hostname == "suyun.daojia.com" || location.hostname == "t-suyun.daojia.com" || location.hostname == "partner.suyun.daojia.58.com" || location.hostname == "old-suyun.daojia.com" || location.hostname == "t.suyun.58.com" || location.hostname == "ditui-suyun.daojia.com") {
+        gio_accountId = gio_accountIds.sy_user;
+    } else if (location.hostname == "driverjoin-suyun.daojia.com" 
+        || location.hostname == "suyun-driver.daojia.com"
+        || location.hostname == "suyun-usedcarsales.daojia.com"
+        || location.hostname == "huoyun.daojia.com"
+        || location.hostname == "sypt.daojia.com"
+        || location.hostname == "suyun.driver.daojia.com"
+        || location.hostname == "driverusercenter.daojia.com") {
+        gio_accountId = gio_accountIds.sy_driver;
+    } else if (location.hostname == "up.daojia.com") {
+        gio_accountId = gio_accountIds.sy_business;
+    } else if (location.hostname == "ma.djtest.cn" || location.hostname == "mb.djtest.cn" || location.hostname == "m.daojia.com") {
+        gio_accountId = gio_accountIds.m;
+    } else if (location.hostname == "ayoptbox57.djtest.cn" || location.hostname == "yuesaoapp.daojia.com") {
+        gio_accountId = gio_accountIds.jz_ys;
+    } else if (location.hostname == "bdap.daojia-inc.com") {
+        gio_accountId = gio_accountIds.bdap;
+    } else if (location.hostname == "bbs.daojia-inc.com" || location.hostname == "live.daojia-inc.com") {
+        gio_accountId = gio_accountIds.work;
+    } else if (location.hostname == "static.daojia.com" || location.hostname == "activitycenter.daojia.com") {
+        gio_accountId = gio_accountIds.jz_ydt;
+    } else if (location.hostname == "djw.daojia-inc.com") {
+        gio_accountId = gio_accountIds.work;
+    } else if (location.hostname == "butterfly.daojia.com") {
+        gio_accountId = gio_accountIds.jz_ydt;
+    } else if (location.hostname == "m-dop.daojia.com") {
+        gio_accountId = gio_accountIds.pt_yydd;
+    } else if (location.hostname == "djw.daojia.com") {
+        gio_accountId = gio_accountIds.jt_llqbb;
+    } else if (location.hostname == "dwatcher.daojia-inc.com") {
+        gio_accountId = gio_accountIds.jt_swz;
+    } else if (location.hostname == "cloud.daojia-inc.com") {
+        gio_accountId = gio_accountIds.jt_djy;
+    } else if (location.hostname == "sale-manage.daojia-inc.com" 
+            || location.hostname == "sycashpool.daojia-inc.com" 
+            || location.hostname == "boss-suyun.daojia-inc.com"
+            || location.hostname == "custom-service.daojia-inc.com") {
+        gio_accountId = gio_accountIds.sy_ent;
+    } else if (location.hostname == "minisite.daojia.com") {
+        gio_accountId = gio_accountIds.minisite;
+    } else if (location.hostname == "daojialianmeng.daojia.com") {
+        gio_accountId = gio_accountIds.lianmeng;
+    } else if (location.hostname == "zs.daojia-inc.com") {
+        gio_accountId = gio_accountIds.jz_zs;
+    } else if (location.hostname == "jz-saleclue.daojia-inc.com") {
+        gio_accountId = gio_accountIds.jz_saleclue;
+    }else if(location.hostname == "jzvisual.daojia-inc.com"){
+        gio_accountId = gio_accountIds.jz_bjkshdd;
+    }
+
+    (function () {
+        if (getBICookie('dj_appid') == '30') {
+            return;
+        }
+        // 增加不加载 gio 的变量
+        if (typeof bi_params !== 'undefined' && Object.prototype.toString.call(bi_params) === '[object Object]' && bi_params.disableGIO) {
+            return
+        }
+        !function (e, t, n, g, i) { e[i] = e[i] || function () { (e[i].q = e[i].q || []).push(arguments) }, n = t.createElement("script"), tag = t.getElementsByTagName("script")[0], n.async = 1, n.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + g, tag.parentNode.insertBefore(n, tag) }(window, document, "script", "assets.growingio.com/2.1/gio.js", "gio");
+        gio('init', gio_accountId, {});
+        gio('config', { 'hashtag': true });
+        gio('send');
+
+    })();
+})();

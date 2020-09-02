@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<!-- saved from url=(0040)http://www.3cfood.com/Index/ucenter.html -->
+<html>
+
+<head>
+    <link href="./css/style.css" rel="stylesheet" type="text/css">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>个人中心</title>
+    <meta name="Description" content="三餐美食网，您身边的美食专家。各色餐厅，精彩呈送，外卖订餐，手机微信点单，快捷享受！">
+    <meta name="Keywords" content="美食,餐厅,订餐,外卖,送餐,订餐网,微信订餐,手机点餐">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="shortcut icon" type="image/x-icon"
+        href="javascript:void(0)">
+    <!-- <script>
+        //读取cookies
+        function gCookie(name) {
+            var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+            if (arr = document.cookie.match(reg)) {
+                return unescape(arr[2]);
+            } else {
+                return null;
+            }
+        }
+
+        //设置cookie
+        function sCookie(name, value, time) {
+            var Days = 30;
+            var exp = new Date();
+            if (time) {
+                exp.setTime(exp.getTime() + time);
+            } else {
+                exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
+            }
+            document.cookie = name + "=" + escape(value) + ";domain=.3cfood.com;path=/;expires=" + exp.toGMTString();
+        }
+
+        var cdnGetResult = new Array();
+        function checkCdn() {
+            if (!window.sessionStorage.getItem('checked_cdn')) {
+                var gCdn = "ali,up";
+                var gCdnArray = gCdn.split(",");
+                var url = "javascript:void(0)" + parseInt(Math.random() * 10000);
+                for (var i in gCdnArray) {
+                    var prefix = gCdnArray[i];
+                    var newurl = url;
+                    newurl = newurl.replace('prefix', prefix);
+                    ajaxCheck(newurl, prefix);
+                }
+
+                function ajaxCheck(url, prefix) {
+                    var obj = new XMLHttpRequest();  // XMLHttpRequest对象用于在后台与服务器交换数据          
+                    obj.open('GET', url, true);
+                    obj.onreadystatechange = function () {
+                        if (obj.readyState == 4) { // readyState==4说明请求已完成
+                            if (obj.status == 200 || obj.status == 304) {
+                                console.log(url, obj.responseText);
+                                console.log("get url: " + url + ",success");
+                                var tmp = {};
+                                tmp['prefix'] = prefix;
+                                tmp['rs'] = true;
+                                cdnGetResult.push(tmp);
+                            } else {
+                                console.log("get cdn:" + url + ",fail :".text);
+                                var tmp = {};
+                                tmp['prefix'] = prefix;
+                                tmp['rs'] = false;
+                                cdnGetResult.push(tmp);
+                            }
+                        }
+                    };
+                    obj.send(null);
+                }
+                setTimeout(function () { getCdnRs(); }, 3000);
+            }
+        }
+        checkCdn();
+        function getCdnRs() {
+            console.log('enter get cdn callback ');
+            if (cdnGetResult.length >= 1) {
+                console.log("cdn rs length," + cdnGetResult.length);
+                var cookieV = "";
+                for (var i in cdnGetResult) {
+                    var result = cdnGetResult[i].rs;
+                    if (result === true) {
+                        cookieV = cookieV + cdnGetResult[i].prefix + "|";
+                    }
+                }
+                sCookie("cdn", cookieV);
+                console.log("cookie value:" + cookieV);
+                window.sessionStorage.setItem("checked_cdn", true);
+                if (cdnGetResult.length < 2) {
+                    console.log("because cdn success less than 2 ,so reload page");
+                    window.location.reload();
+                }
+            } else {
+                console.log('no get cdn length,next timeout ');
+                setTimeout(function () { getCdnRs(); }, 3000);
+            }
+        }
+    </script> -->
+    <link rel="stylesheet" type="text/css" href="./user_center_files/wap.min.css">
+    <style>
+        .font16 {
+            color: #999;
+            font-size: 14px;
+            line-height: 20px;
+        }
+
+        .personal_data {
+            height: 80px;
+            background-color: #d6f6ff;
+            margin-top: -5px;
+        }
+
+        .vip_icon {
+            display: inline-block
+        }
+
+        .font18 {
+            font-size: 16px;
+        }
+
+        .personal_data_nmb {
+            margin-left: 125px;
+            margin-top: 6px;
+        }
+
+        .user_img_box {
+            position: absolute;
+            top: 80px;
+            left: 35px;
+        }
+
+        .personal_data_member li {
+            float: left;
+            width: 33%;
+            text-align: center;
+            margin-top: 28px;
+        }
+
+        .user_center {
+            display: block;
+            padding: 2% 0;
+            background: url(./asset/logo.png);
+            background-size: 100%;
+            height: 100px;
+        }
+
+        .user_img_box {
+            margin: 5px auto 0;
+            width: 80px;
+            height: 80px;
+            border: 1px solid #fce840;
+            border-radius: 50%;
+            background: #FFF;
+            overflow: hidden
+        }
+
+        .leaguers {
+            width: 0px;
+            height: 25px;
+            position: absolute;
+            top: 114px;
+            left: 240px;
+        }
+
+        .fontb img {
+            width: 24px;
+            margin-left: 5px;
+            margin-bottom: 10px;
+        }
+
+        .ucenter_ul li {
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(240, 237, 240, 0.66);
+            background: url() no-repeat 95% center;
+            border-color: #9ce9ff;
+            background-size: auto 30%;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .ucenter_ul li p:before {
+            content: "";
+            display: inline-block;
+            vertical-align: middle;
+            width: 25px;
+            height: 25px;
+            margin-right: 10px;
+            background: url(https://ali-s.0xiao.cn/3cfood/Public/2018-10-30-1126/static/img/new_ucenter.png) no-repeat 0 center;
+            background-size: auto 100%
+        }
+
+        li p.ucenter_myorder::before {
+            background-position: 3px center
+        }
+
+        li p.ucenter_buyorder:before {
+            background-position: -100px center
+        }
+
+        li p.ucenter_myfavor:before {
+            background-position: -46px center
+        }
+
+        li p.ucenter_mycard:before {
+            background-position: -71px center
+        }
+
+        li p.ucenter_myscore:before {
+            background-position: -96px center;
+            width: 24px
+        }
+
+        li p.ucenter_mycoupon:before {
+            background-position: -145px center
+        }
+
+        li p.ucenter_myaddress:before {
+            background-position: -22px center
+        }
+
+        li p.ucenter_myyouhui:before {
+            background-position: -120px center
+        }
+
+        .fullpop {
+            width: 244px;
+            height: 126px;
+            position: fixed;
+            top: 178px;
+            z-index: 1003;
+            min-height: 100px;
+            text-align: center;
+            display: none
+        }
+
+        .fullpop button {
+            background-color: #ff8e00;
+            border-radius: 5px;
+            color: white;
+            border: none;
+            width: 64px;
+            height: 30px;
+            margin-top: 10px;
+        }
+
+        .fullbg {
+            display: none
+        }
+
+        .bord {
+            height: 1px;
+            width: 54px;
+            background-color: white;
+            position: absolute;
+            bottom: -1px;
+            z-index: 1000;
+            left: -10px;
+        }
+
+        .text {
+            display: inline-block;
+            line-height: 40px;
+        }
+    </style>
+</head>
+
+<body data-pagename="ucenter" data-mobile="1" data-iphone="0" data-weixin="0" data-user_id="" style="overflow:scroll">
+    <div class="relative"
+        style="padding-bottom: 80px; transition-timing-function: cubic-bezier(0.1, 0.57, 0.1, 1); transition-duration: 0ms;">
+        <a class="nou clof font16 center user_center" href="javascript:void(0)">
+            <div class="user_img_box"><img width="80" height="80" alt="会员头像" src="./user_center_files/nouser.png"></div>
+            <p style="margin-top:140px;color:#000;">请登录/注册</p>
+        </a>
+        <div class="personal_data"><a href="javascript:void(0)">
+                <div class="user_img_box"><img width="80" height="80" alt="会员头像" src="./user_center_files/nouser.png">
+                </div>
+            </a>
+            <div class="personal_data_nmb">
+                <div class="fontb" style="font-size:18px">
+                    <div class="text"></div>
+                    <!--<img src="javascript:void(0)">--><img
+                        src="./user_center_files/wap_icon_1.png" alt="会员图标" class="vip_icon">
+                </div>
+            </div>
+            <div class="leaguers"></div>
+            <!-- <ul class="personal_data_member"><li onclick="void(0);"><p class="font18">元</p><p class="font16">会员余额</p></li><li onclick="void(0);"><p class="font18">分</p><p class="font16">会员积分</p></li><li class="right" onclick="void(0);"><p class="font18 ">个</p><p class="font16">优惠券</p></li></ul>-->
+        </div>
+        <ul class="mt10 bgf ucenter_ul">
+
+                <li onclick="void(0);">
+                    <div class="bord"></div>
+                    <p class="ucenter_myscore">基本信息</p>
+                </li>
+            <li onclick="void(0);">
+                <div class="bord"></div>
+                <p class="ucenter_myorder">我的订单</p>
+            </li>
+            <li onclick="void(0);">
+                <div class="bord"></div>
+                <p class="ucenter_myaddress">日程表</p>
+            </li>
+            <li onclick="void(0);">
+                <div class="bord"></div>
+                <p class="ucenter_myfavor">信用评分</p>
+            </li>
+            
+        </ul>
+        <ul class="mt10 bgf ucenter_ul">
+            <li onclick="void(0);">
+                <div class="bord"></div>
+                <p class="ucenter_mycard">空闲时段</p>
+            </li>
+            <li onclick="void(0);">
+                <div class="bord"></div>
+                <p class="ucenter_mycoupon">我的单店礼品券</p>
+            </li>
+            <li onclick="void(0);">
+                <div class="bord"></div>
+                <p class="ucenter_myyouhui">我的平台优惠券</p>
+            </li>
+        </ul>
+    </div>
+    <div class="fullbg"></div>
+    <div class="fullpop">
+        <p>成为单店会员，钻石会点亮</p>
+        <p>成为盟主会员，皇冠会点亮</p><button>知道了</button>
+    </div>
+    <!-- <script src="./user_center_files/wap.min.js"></script>
+    <script>
+        var GROUP = "/wap";
+        var APP = "";
+    </script> -->
+    <footer>
+        <table border="0" cellpadding="0" cellspacing="0" id="foot_menu">
+            <tbody>
+                <tr>
+                    <!-- <td id="foot_back" width="1" style=""><span class="footback" style="color:#b9b9b9">
+                            <div class="foot_ico foot_back"></div>返回
+                        </span></td> -->
+                    <td id="foot_home" width="1" data-name="foot_home"><a
+                            href="./catalog.html">
+                            <div class="foot_ico foot_home"></div>首页
+                        </a></td>
+                    <!-- <td id="foot_goods" width="1" data-name="foot_goods"><span href="javascrpt:;" onclick="goFood()"
+                            class="">
+                            <div class="foot_ico foot_goods"></div>商品
+                        </span></td>
+                    <td id="foot_order" width="1" data-name="foot_order"><a
+                            href="javascript:void(0)">
+                            <div class="foot_ico foot_order"></div>购物车
+                        </a></td> -->
+                    <td id="foot_user" width="1" data-name="foot_user"><a
+                            href="./user_center.html"
+                            class="hover">
+                            <div class="foot_ico foot_user"></div>我的
+                        </a></td>
+                </tr>
+            </tbody>
+        </table>
+    </footer>
+    <!-- <script>
+        var has_si = "",
+            si = "",
+            foodUrl = "/resmjfgih.html",
+            actionName = "ucenter";
+        if (typeof (actionName) != "undefined" && actionName == "res") {
+            if (typeof (has_si) != "undefined" && (has_si == 1 || has_si == "1")) {
+                if (typeof (si) != "undefined" && si != "undefined" && si != null && si != '') {
+                    localStorage.setItem("si", si);
+                    localStorage.removeItem("myfoodArr");
+                } else {
+                    localStorage.removeItem("si");
+                }
+            } else {
+                localStorage.removeItem("si");
+            }
+            $("#foot_goods").find("span").addClass("hover");
+        } else {
+
+            $("#foot_goods").find("span").removeClass("hover");
+        }
+        function goFood(event) {
+            console.log(123);
+            var si = localStorage.getItem("si"),
+                url = "";
+            if (typeof (si) == undefined || si == null || si == '' || si <= 0) {
+                url = foodUrl + "?param_t=" + 10000 * Math.random();
+            } else {
+                url = foodUrl + "?si=" + si + "&param_t=" + 10000 * Math.random();
+            }
+            window.location.href = "javascript:void(0)" + url;
+            event.preventDefault();
+        }
+        // 平台返回
+        function initPlatReturn() {
+            // 初始化平台返回
+            var getspread = $.parseJSON(getCookie("from_spread")),
+                from_where = null;
+            $("span.footback").removeClass("hover");
+            if (getspread && getspread.hasOwnProperty("from_where")) {
+                from_where = getspread['from_where'];
+            }
+            if (getspread && from_where) {
+                $("span.footback").click(function () {
+                    try {
+                        from_where += from_where.indexOf('position') > -1 ? '?id=' + getspread['spread_token'] + '&' : '?';
+                        location.href = from_where + Math.random();
+                    }
+                    catch (e) { }
+                    return false;
+                });
+                $('#foot_back').show();
+                $('#foot_menu a').each(function () {
+                    var href = $(this).prop('href');
+                    $(this).prop('href', [href, href.indexOf('?') > -1 ? '&' : '?', 't=', getspread.spread_token, '&rnd=', Math.random()].join(""));
+                })
+            }
+            // 初始化底部菜单的选中
+            var urlstr = location.href;
+            $("#foot_menu a").each(function () {
+                if ((urlstr + '/').indexOf($(this).attr('href')) > -1 && $(this).attr('href') != '') {
+                    $(this).addClass("hover");
+                }
+            });
+        }
+        initPlatReturn();
+    </script>
+    <script>        var userScroll;
+        $(function () {
+
+            $("#foot_user a").addClass("hover");
+            userScroll = new IScroll("body", {
+                disableMouse: false,
+                disablePointer: false,
+                scrollbars: false
+            });
+            //点击会员提示信息
+            $('.personal_data_nmb').on('click', '.vip_icon', function () {
+                $('.fullbg').show();
+                $('.fullpop').show();
+            });
+            $(".fullpop button").click(function () {
+                $('.fullbg').hide()
+                $('.fullpop').hide()
+            });
+            $('.fullbg').click(function () {
+                $('.fullbg').hide();
+                $('.fullpop').hide();
+            })
+
+            var vipName = $('.text').text();
+            $('.text').text(vipName.length < 7 ? vipName : (vipName.slice(0, 5) + '...'));
+        });
+        /*页面跳转*/
+        function goMyselfPage(goUrl) {
+            var userId = $("body").data("user_id");
+            if (userId) {
+                window.location.href = goUrl;
+            } else {
+                window.location.href = "/index/login.html";
+            }
+        }
+    </script> -->
+</body>
+
+</html>

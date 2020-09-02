@@ -1,0 +1,179 @@
+/**
+ * 获取url中参数的值
+ * @param name
+ * @returns
+ */
+function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    if (r != null) return unescape(r[2]); return null; //返回参数值
+}
+
+/*
+* url 目标url
+* arg 需要替换的参数名称
+* arg_val 替换后的参数的值
+* return url 参数替换后的url
+*/
+function changeURLArg(url,arg,arg_val){
+    var pattern=arg+'=([^&]*)';
+    var replaceText=arg+'='+arg_val;
+    if(url.match(pattern)){
+        var tmp='/('+ arg+'=)([^&]*)/gi';
+        tmp=url.replace(eval(tmp),replaceText);
+        return tmp;
+    }else{
+        if(url.match('[\?]')){
+            return url+'&'+replaceText;
+        }else{
+            return url+'?'+replaceText;
+        }
+    }
+    return url+'\n'+arg+'\n'+arg_val;
+}
+
+/**
+ * 判断是否为空
+ * @param str
+ * @returns {boolean}
+ */
+function isNotNull(str) {
+    if (str != '' && str != null && (typeof str != 'undefined')) {
+        return true;
+    }
+    return false;
+}
+function setCookie(name,value,day) {
+    var exp = new Date();
+    if(!day){
+        day = 30;
+    }
+    exp.setTime(exp.getTime() + day*24*60*60*1000);
+    document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString()+";path=/";
+}
+function getCookie(name) {
+    var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)");
+    if(arr=document.cookie.match(reg))
+        return unescape(arr[2]);
+    else
+        return null;
+}
+/**
+ * 获取操作系统类型，
+ * 0 Android
+ * 1 iOS
+ *
+ */
+function getOSType() {
+    if (/(Android)/i.test(navigator.userAgent)) {
+        return 0;
+    } else if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)) {
+        return 1;
+    } else {
+        return 2;
+    }
+}
+
+/*var bi_params = {"auto_mode":true, "cate_id":'$!cateId'};*/
+/*(function() {
+    var bi_hm = document.createElement("script");
+    bi_hm.src = "https://static.daojia.com/bi/buried_point/js/tracker.js";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bi_hm, s);
+})();*/
+
+/**
+ * 是否微信浏览器
+ * @returns {Boolean}
+ */
+function isWeiXin(){
+    var ua = window.navigator.userAgent.toLowerCase();
+    if(ua.match(/MicroMessenger/i) == 'micromessenger'){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+/**
+ * 修改url中的指定参数值
+ * @param url
+ * @param arg
+ * @param arg_val
+ * @returns {string}
+ */
+function changeURLArg(url,arg,arg_val){
+    var pattern=arg+'=([^&]*)';
+    var replaceText=arg+'='+arg_val;
+    if(url.match(pattern)){
+        var tmp='/('+ arg+'=)([^&]*)/gi';
+        tmp=url.replace(eval(tmp),replaceText);
+        return tmp;
+    }else{
+        if(url.match('[\?]')){
+            return url+'&'+replaceText;
+        }else{
+            return url+'?'+replaceText;
+        }
+    }
+    return url+'\n'+arg+'\n'+arg_val;
+}
+
+/**
+ * 解析url中对参数
+ * @param url 完整url: http://xx.xx/?a=a...
+ * @returns {*}
+ */
+function getUrlParams(url) {
+    var result = url.match(new RegExp("[\?\&][^\?\&]+=[^\?\&]+","g"));
+    var args;
+    //解析search
+    if(result != null){
+        //将结果转换为 object
+        args = {};
+        for(var i = 0; i < result.length; i++){
+            var ele = result[i];
+            var inx = ele.indexOf("=");
+            args[ele.substring(1, inx)] = ele.substring(inx+1);
+        }
+    }
+    return args;
+}
+
+/**
+ * 到家app参数处理
+ * @param url
+ * @returns {*}
+ */
+function encodeURLForDJAPP(url) {
+    var args = getUrlParams(url);
+    if(args["phone"] && args["phone"].toLowerCase().indexOf("%2b") > -1) {
+        var encodePhone = encodeURIComponent(args["phone"]);
+        return changeURLArg(url,"phone",encodePhone);
+    }
+    return url;
+}
+
+//是否时到家app
+function isDJApp(caller) {
+    if(isDJAppIOS(caller) || isDJAppAndroid(caller)) {//到家app
+        return true;
+    }
+    return false;
+}
+
+function isDJAppIOS(caller) {
+    return "djios" == caller;
+}
+
+function isDJAppAndroid(caller) {
+    return "djandroid" == caller;
+}
+
+function isGanJiAPP(channel) {
+    return 9 == channel;
+}
+
+function isSuYunApp(channel) {
+    return 4 == channel;
+}
